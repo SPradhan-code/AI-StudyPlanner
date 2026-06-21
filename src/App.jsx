@@ -20,8 +20,24 @@ import {
 import ThreeCanvas from './components/ThreeCanvas';
 import { generateStudyPlan, getAICoachFeedback, getTopicsForSubject } from './utils/aiPlanner';
 import confetti from 'canvas-confetti';
+import { auth, saveUserData, getUserData } from './utils/firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged 
+} from 'firebase/auth';
 
 function App() {
+  // --- Auth State ---
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
+  const [authError, setAuthError] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+
   // --- Persistent State or Defaults ---
   const [isConfigured, setIsConfigured] = useState(false);
   const [wizardStep, setWizardStep] = useState(1); // 1: Profile, 2: Subjects, 3: Schedule
@@ -31,22 +47,7 @@ function App() {
   const [studyStyle, setStudyStyle] = useState('visual'); // visual, practice, reading
 
   // Subjects & Topics
-  const [subjects, setSubjects] = useState([
-    {
-      id: 'sub-1',
-      name: 'Mathematics',
-      difficulty: 'hard',
-      topics: getTopicsForSubject('Mathematics'),
-      completedTopics: []
-    },
-    {
-      id: 'sub-2',
-      name: 'Physics',
-      difficulty: 'medium',
-      topics: getTopicsForSubject('Physics'),
-      completedTopics: []
-    }
-  ]);
+  const [subjects, setSubjects] = useState([]);
   
   // New Subject Input Temp State
   const [tempSubName, setTempSubName] = useState('');
@@ -59,10 +60,144 @@ function App() {
   const [weeklyOffDays, setWeeklyOffDays] = useState([0]); // default Sunday off
 
   // Interactive Panel States
-  const [activeSubjectId, setActiveSubjectId] = useState('sub-1');
+  const [activeSubjectId, setActiveSubjectId] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, calendar, coach
   const [studyPlan, setStudyPlan] = useState(null);
   const [coachFeedback, setCoachFeedback] = useState(null);
+
+  // --- Auth Listener & Data Sync ---
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        setAuthLoading(true);
+        try {
+          const data = await getUserData(currentUser.uid);
+          if (data) {
+            setStudentName(data.studentName || '');
+            setStudyStyle(data.studyStyle || 'visual');
+            setSubjects(data.subjects || []);
+            setExamDate(data.examDate || '');
+            setDailyHours(data.dailyHours || 4);
+            setWeeklyOffDays(data.weeklyOffDays || [0]);
+            setIsConfigured(data.isConfigured || false);
+            if (data.subjects && data.subjects.length > 0) {
+              setActiveSubjectId(data.subjects[0].id);
+            }
+          } else {
+            // New user defaults
+            setIsConfigured(false);
+            setWizardStep(1);
+            setStudentName('');
+            setStudyStyle('visual');
+            setSubjects([
+              {
+                id: 'sub-1',
+                name: 'Mathematics',
+                difficulty: 'hard',
+                topics: getTopicsForSubject('Mathematics'),
+                completedTopics: []
+              },
+              {
+                id: 'sub-2',
+                name: 'Physics',
+                difficulty: 'medium',
+                topics: getTopicsForSubject('Physics'),
+                completedTopics: []
+              }
+            ]);
+            // Set default date to 12 days from now
+            const defaultDate = new Date();
+            defaultDate.setDate(defaultDate.getDate() + 12);
+            setExamDate(defaultDate.toISOString().split('T')[0]);
+            setDailyHours(4);
+            setWeeklyOffDays([0]);
+          }
+        } catch (err) {
+          console.error("Failed to load user data:", err);
+        } finally {
+          setAuthLoading(false);
+        }
+      } else {
+        // Reset state on logout
+        setIsConfigured(false);
+        setWizardStep(1);
+        setStudentName('');
+        setStudyStyle('visual');
+        setSubjects([]);
+        setExamDate('');
+        setDailyHours(4);
+        setWeeklyOffDays([0]);
+        setAuthLoading(false);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  // Debounced Auto-save Effect
+  useEffect(() => {
+    if (user && isConfigured) {
+      const timer = setTimeout(async () => {
+        try {
+          await saveUserData(user.uid, {
+            studentName,
+            studyStyle,
+            subjects,
+            examDate,
+            dailyHours,
+            weeklyOffDays,
+            isConfigured
+          });
+        } catch (err) {
+          console.error("Error auto-saving progress:", err);
+        }
+      }, 1000); // 1-second debounce
+      return () => clearTimeout(timer);
+    }
+  }, [subjects, examDate, dailyHours, weeklyOffDays, studyStyle, studentName, isConfigured, user]);
+
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    if (!authEmail.trim() || !authPassword.trim()) {
+      setAuthError('Please fill in all fields.');
+      return;
+    }
+    if (authPassword.length < 6) {
+      setAuthError('Password must be at least 6 characters.');
+      return;
+    }
+
+    setAuthError('');
+    setActionLoading(true);
+    try {
+      if (authMode === 'login') {
+        await signInWithEmailAndPassword(auth, authEmail, authPassword);
+      } else {
+        await createUserWithEmailAndPassword(auth, authEmail, authPassword);
+      }
+    } catch (err) {
+      console.error("Auth error:", err);
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setAuthError('Invalid email or password.');
+      } else if (err.code === 'auth/email-already-in-use') {
+        setAuthError('This email is already registered.');
+      } else if (err.code === 'auth/invalid-email') {
+        setAuthError('Please enter a valid email address.');
+      } else {
+        setAuthError(err.message);
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   // Set default exam date to 12 days from now
   useEffect(() => {
@@ -160,7 +295,7 @@ function App() {
     }
   };
 
-  const handleFinishWizard = () => {
+  const handleFinishWizard = async () => {
     if (!studentName.trim()) {
       alert("Please enter your name to customize the AI coach.");
       return;
@@ -175,6 +310,22 @@ function App() {
     }
     setIsConfigured(true);
     setActiveTab('dashboard');
+
+    if (user) {
+      try {
+        await saveUserData(user.uid, {
+          studentName,
+          studyStyle,
+          subjects,
+          examDate,
+          dailyHours,
+          weeklyOffDays,
+          isConfigured: true
+        });
+      } catch (err) {
+        console.error("Failed to save config:", err);
+      }
+    }
   };
 
   const handleResetPlan = () => {
@@ -215,7 +366,85 @@ function App() {
       </div>
 
       {/* ================= LANDING / SETUP SCREEN ================= */}
-      {!isConfigured ? (
+      {authLoading ? (
+        <div style={{ display: 'flex', minHeight: '100vh', justifyContent: 'center', alignItems: 'center' }}>
+          <div className="spinner" style={{ width: '40px', height: '40px' }}></div>
+        </div>
+      ) : !user ? (
+        /* Sign In / Sign Up Card */
+        <div className="auth-container">
+          <div style={{ textAlign: 'center', maxWidth: '500px', marginBottom: '24px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)', padding: '6px 14px', borderRadius: '30px', marginBottom: '16px' }}>
+              <Brain size={18} color="var(--secondary)" />
+              <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--secondary)' }}>AI Study Planner</span>
+            </div>
+            <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '8px', fontFamily: 'var(--font-display)' }}>
+              Welcome to Your Cosmic Study Space
+            </h1>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+              Sign in to sync your personalized 3D curriculum and progress across all your devices.
+            </p>
+          </div>
+
+          <div className="glass-panel auth-card">
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'center', background: 'rgba(255,255,255,0.02)' }}>
+              <h2 style={{ fontSize: '18px' }}>{authMode === 'login' ? 'Sign In' : 'Create Account'}</h2>
+            </div>
+            <div className="card-body">
+              <form onSubmit={handleAuth}>
+                {authError && (
+                  <div className="auth-alert-error">
+                    <AlertCircle size={16} />
+                    <span>{authError}</span>
+                  </div>
+                )}
+                
+                <div className="auth-input-group">
+                  <label className="auth-input-label">Email Address</label>
+                  <input 
+                    type="email" 
+                    className="form-input" 
+                    placeholder="you@example.com" 
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="auth-input-group" style={{ marginBottom: '24px' }}>
+                  <label className="auth-input-label">Password</label>
+                  <input 
+                    type="password" 
+                    className="form-input" 
+                    placeholder="••••••••" 
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={actionLoading}>
+                  {actionLoading ? <div className="spinner"></div> : (authMode === 'login' ? 'Sign In' : 'Sign Up')}
+                </button>
+              </form>
+
+              <div className="auth-footer">
+                {authMode === 'login' ? "Don't have an account?" : "Already have an account?"}
+                <button 
+                  type="button" 
+                  className="auth-switch-btn" 
+                  onClick={() => {
+                    setAuthMode(authMode === 'login' ? 'signup' : 'login');
+                    setAuthError('');
+                  }}
+                >
+                  {authMode === 'login' ? 'Sign Up' : 'Sign In'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : !isConfigured ? (
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', justifyContent: 'center', alignItems: 'center', padding: '40px 20px' }}>
           
           {/* Landing Header */}
@@ -585,6 +814,14 @@ function App() {
                 >
                   <RefreshCw size={12} />
                   <span>Reconfigure</span>
+                </button>
+                <button 
+                  onClick={handleLogout}
+                  className="btn-secondary"
+                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px', borderColor: 'rgba(239,68,68,0.2)', color: 'var(--danger)' }}
+                >
+                  <User size={12} />
+                  <span>Sign Out</span>
                 </button>
               </div>
             </div>
