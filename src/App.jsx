@@ -15,7 +15,9 @@ import {
   Coffee, 
   Award,
   RefreshCw,
-  Home
+  Home,
+  Upload,
+  FileText
 } from 'lucide-react';
 import ThreeCanvas from './components/ThreeCanvas';
 import { generateStudyPlan, getAICoachFeedback, getLiveAICoachFeedback, getTopicsForSubject } from './utils/aiPlanner';
@@ -53,6 +55,8 @@ function App() {
   const [tempSubName, setTempSubName] = useState('');
   const [tempSubDiff, setTempSubDiff] = useState('medium');
   const [tempSubChapters, setTempSubChapters] = useState(5);
+  const [isCustomChapters, setIsCustomChapters] = useState(false);
+  const [customChaptersText, setCustomChaptersText] = useState('');
 
   // Schedule details
   const [examDate, setExamDate] = useState('');
@@ -275,21 +279,65 @@ function App() {
   }, [isConfigured, subjects, examDate, dailyHours, weeklyOffDays, studyStyle, studentName]);
 
   // --- Handlers ---
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target.result;
+      if (file.name.endsWith('.json')) {
+        try {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed)) {
+            setCustomChaptersText(parsed.join('\n'));
+          } else if (typeof parsed === 'object' && parsed.chapters && Array.isArray(parsed.chapters)) {
+            setCustomChaptersText(parsed.chapters.join('\n'));
+          } else {
+            alert("JSON must be an array of chapter names or have a 'chapters' array property.");
+          }
+        } catch (err) {
+          alert("Error parsing JSON file: " + err.message);
+        }
+      } else {
+        // Assume text file
+        const lines = content.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+        setCustomChaptersText(lines.join('\n'));
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const handleAddSubject = (e) => {
     e.preventDefault();
     if (!tempSubName.trim()) return;
+
+    let topics = [];
+    if (isCustomChapters && customChaptersText.trim()) {
+      topics = customChaptersText
+        .split('\n')
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+    }
+
+    if (topics.length === 0) {
+      topics = getTopicsForSubject(tempSubName.trim(), parseInt(tempSubChapters));
+    }
 
     const newSubject = {
       id: `sub-${Date.now()}`,
       name: tempSubName.trim(),
       difficulty: tempSubDiff,
-      topics: getTopicsForSubject(tempSubName.trim(), parseInt(tempSubChapters)),
+      topics: topics,
       completedTopics: []
     };
 
     setSubjects([...subjects, newSubject]);
     setActiveSubjectId(newSubject.id);
     setTempSubName('');
+    setCustomChaptersText('');
+    setIsCustomChapters(false);
   };
 
   const handleRemoveSubject = (id) => {
@@ -610,9 +658,92 @@ function App() {
                         <Plus size={16} /> Add
                       </button>
                     </div>
-                    <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)' }}>
-                      💡 Subjects like Physics, Maths, Biology auto-fill with standard topics!
+
+                    {/* Method Selector Tabs */}
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px', marginBottom: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setIsCustomChapters(false)}
+                        style={{
+                          flex: 1,
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          border: !isCustomChapters ? '1px solid var(--secondary)' : '1px solid rgba(255,255,255,0.05)',
+                          backgroundColor: !isCustomChapters ? 'rgba(0, 242, 254, 0.08)' : 'rgba(255,255,255,0.02)',
+                          color: !isCustomChapters ? 'var(--secondary)' : 'var(--text-secondary)',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          outline: 'none'
+                        }}
+                      >
+                        Auto-Fill Chapters
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsCustomChapters(true)}
+                        style={{
+                          flex: 1,
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          border: isCustomChapters ? '1px solid var(--secondary)' : '1px solid rgba(255,255,255,0.05)',
+                          backgroundColor: isCustomChapters ? 'rgba(0, 242, 254, 0.08)' : 'rgba(255,255,255,0.02)',
+                          color: isCustomChapters ? 'var(--secondary)' : 'var(--text-secondary)',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          outline: 'none'
+                        }}
+                      >
+                        Custom / Upload Chapters
+                      </button>
                     </div>
+
+                    {!isCustomChapters ? (
+                      <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                        💡 Subjects like Physics, Maths, Biology auto-fill with standard topics!
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                        <textarea
+                          className="form-input"
+                          placeholder="Enter custom chapters (one per line, e.g.)&#13;Quantum Mechanics&#13;Thermodynamics&#13;Optics"
+                          rows={3}
+                          style={{ resize: 'vertical', fontFamily: 'var(--font-sans)', fontSize: '12px' }}
+                          value={customChaptersText}
+                          onChange={(e) => setCustomChaptersText(e.target.value)}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                            Each line becomes a chapter/topic.
+                          </span>
+                          
+                          <label 
+                            className="btn-secondary" 
+                            style={{ 
+                              padding: '4px 10px', 
+                              fontSize: '10px', 
+                              borderRadius: '6px', 
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            <Upload size={10} />
+                            <span>Upload .txt / .json</span>
+                            <input 
+                              type="file" 
+                              accept=".txt,.json" 
+                              onChange={handleFileUpload} 
+                              style={{ display: 'none' }} 
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    )}
                   </form>
 
                   {/* Render added subjects list */}
