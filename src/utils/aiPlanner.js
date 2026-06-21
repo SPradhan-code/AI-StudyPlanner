@@ -359,3 +359,101 @@ export function getAICoachFeedback({ subjects, daysRemaining, studyStyle }) {
     completedTopics
   };
 }
+
+/**
+ * Asynchronously calls the real Gemini API to fetch dynamic study coaching feedback.
+ * Falls back to the rule-based local feedback if the key is missing or the request fails.
+ */
+export async function getLiveAICoachFeedback({ subjects, daysRemaining, studyStyle, studentName }) {
+  const localFallback = getAICoachFeedback({ subjects, daysRemaining, studyStyle });
+  
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey || apiKey === "your_gemini_api_key_here") {
+    console.log("Gemini API key not found in environment, using local rule-based feedback.");
+    return localFallback;
+  }
+
+  // Calculate statistics for context
+  let totalTopics = 0;
+  let completedTopics = 0;
+  subjects.forEach(sub => {
+    totalTopics += sub.topics.length;
+    completedTopics += sub.completedTopics.length;
+  });
+  const completionRate = totalTopics > 0 ? (completedTopics / totalTopics) * 100 : 0;
+
+  const prompt = `You are a supportive, futuristic AI study coach in a 3D Study Universe.
+Analyze the student's study plan progress and provide a highly motivational status report.
+
+Student Information:
+- Name: ${studentName || "Student"}
+- Pacing Mode: ${studyStyle} (e.g. visual maps, practice questions, reading summaries)
+- Days Remaining to Exam: ${daysRemaining} days
+- Overall Progress: ${completedTopics} of ${totalTopics} chapters completed (${completionRate.toFixed(0)}% completion)
+
+Subject breakdown:
+${subjects.map(s => `- ${s.name}: ${s.completedTopics.length}/${s.topics.length} chapters completed (${s.difficulty} prep difficulty)`).join('\n')}
+
+Generate your response as a JSON object containing EXACTLY:
+1. "statusText": A status text (e.g., "Critical Risk", "Pace Warning", "On Track", "Fully Prepared")
+2. "status": A color status string. Must be exactly one of: "success", "warning", "danger"
+3. "coachReport": A warm, encouraging 3-4 sentence message addressing the student directly. Focus on concrete scheduling insights and advice tailored to their ${studyStyle} style.
+4. "priorityAdvice": An array of exactly 3 specific action checklist items to do next.
+
+Format the output strictly as JSON. No markdown wrappers, no backticks.`;
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                statusText: { type: "STRING" },
+                status: { type: "STRING", enum: ["success", "warning", "danger"] },
+                coachReport: { type: "STRING" },
+                priorityAdvice: {
+                  type: "ARRAY",
+                  items: { type: "STRING" }
+                }
+              },
+              required: ["statusText", "status", "coachReport", "priorityAdvice"]
+            }
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    const text = result.candidates[0].content.parts[0].text;
+    const parsed = JSON.parse(text);
+
+    return {
+      completionRate,
+      totalTopics,
+      completedTopics,
+      status: parsed.status || localFallback.status,
+      statusText: parsed.statusText || localFallback.statusText,
+      coachReport: parsed.coachReport || localFallback.coachReport,
+      priorityAdvice: parsed.priorityAdvice || localFallback.priorityAdvice
+    };
+  } catch (error) {
+    console.error("Gemini live feedback call failed. Falling back to rules:", error);
+    return localFallback;
+  }
+}
+

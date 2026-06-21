@@ -18,7 +18,7 @@ import {
   Home
 } from 'lucide-react';
 import ThreeCanvas from './components/ThreeCanvas';
-import { generateStudyPlan, getAICoachFeedback, getTopicsForSubject } from './utils/aiPlanner';
+import { generateStudyPlan, getAICoachFeedback, getLiveAICoachFeedback, getTopicsForSubject } from './utils/aiPlanner';
 import confetti from 'canvas-confetti';
 import { auth, saveUserData, getUserData } from './utils/firebase';
 import { 
@@ -239,15 +239,38 @@ function App() {
         dailyHours,
         weeklyOffDays
       });
-      
-      const coach = getAICoachFeedback({
+      setStudyPlan(plan);
+
+      // 1. Instantly calculate and render static rule-based feedback (zero delay)
+      const fallbackCoach = getAICoachFeedback({
         subjects,
         daysRemaining: plan.daysRemaining,
         studyStyle
       });
+      setCoachFeedback(fallbackCoach);
 
-      setStudyPlan(plan);
-      setCoachFeedback(coach);
+      // 2. Fetch rich, dynamic AI advice from Gemini API in the background
+      let active = true;
+      const loadLiveFeedback = async () => {
+        try {
+          const liveCoach = await getLiveAICoachFeedback({
+            subjects,
+            daysRemaining: plan.daysRemaining,
+            studyStyle,
+            studentName
+          });
+          if (active) {
+            setCoachFeedback(liveCoach);
+          }
+        } catch (err) {
+          console.error("Error loading live Gemini feedback:", err);
+        }
+      };
+      loadLiveFeedback();
+
+      return () => {
+        active = false;
+      };
     }
   }, [isConfigured, subjects, examDate, dailyHours, weeklyOffDays, studyStyle, studentName]);
 
