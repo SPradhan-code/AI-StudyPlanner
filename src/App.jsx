@@ -65,14 +65,28 @@ function App() {
   const [studyPlan, setStudyPlan] = useState(null);
   const [coachFeedback, setCoachFeedback] = useState(null);
 
-  // --- Auth Listener & Data Sync ---
+  // --- Auth Listener & Data Sync with LocalStorage Fallback ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
         setAuthLoading(true);
         try {
-          const data = await getUserData(currentUser.uid);
+          let data = null;
+          try {
+            data = await getUserData(currentUser.uid);
+          } catch (dbErr) {
+            console.warn("Could not load from Firestore database, falling back to local storage:", dbErr);
+          }
+
+          // If no database data found or DB errored out, check backup local storage
+          if (!data) {
+            const backup = localStorage.getItem(`ai_study_planner_user_${currentUser.uid}`);
+            if (backup) {
+              data = JSON.parse(backup);
+            }
+          }
+
           if (data) {
             setStudentName(data.studentName || '');
             setStudyStyle(data.studyStyle || 'visual');
@@ -134,22 +148,30 @@ function App() {
     return unsubscribe;
   }, []);
 
-  // Debounced Auto-save Effect
+  // Debounced Auto-save Effect with LocalStorage Backup
   useEffect(() => {
-    if (user && isConfigured) {
+    if (user) {
       const timer = setTimeout(async () => {
-        try {
-          await saveUserData(user.uid, {
-            studentName,
-            studyStyle,
-            subjects,
-            examDate,
-            dailyHours,
-            weeklyOffDays,
-            isConfigured
-          });
-        } catch (err) {
-          console.error("Error auto-saving progress:", err);
+        const payload = {
+          studentName,
+          studyStyle,
+          subjects,
+          examDate,
+          dailyHours,
+          weeklyOffDays,
+          isConfigured
+        };
+
+        // Always save to localStorage as a robust local backup
+        localStorage.setItem(`ai_study_planner_user_${user.uid}`, JSON.stringify(payload));
+
+        // Save to Firestore if fully configured
+        if (isConfigured) {
+          try {
+            await saveUserData(user.uid, payload);
+          } catch (err) {
+            console.error("Error auto-saving progress to Firestore:", err);
+          }
         }
       }, 1000); // 1-second debounce
       return () => clearTimeout(timer);
