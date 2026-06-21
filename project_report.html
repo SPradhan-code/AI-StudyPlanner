@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Report - AI Study Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #06060c;
+      --bg-card: rgba(13, 13, 25, 0.65);
+      --primary: #6366f1;
+      --secondary: #00f2fe;
+      --accent: #d946ef;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 50px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(16px);
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    h1 {
+      font-size: 38px;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #fff 40%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 16px;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 24px;
+      border-bottom: 2px solid rgba(255,255,255,0.05);
+      padding-bottom: 8px;
+      margin-top: 40px;
+      color: var(--secondary);
+    }
+
+    h3 {
+      font-size: 18px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+
+    ul, ol {
+      margin-left: 24px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .code-block {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      color: #e2e8f0;
+      overflow-x: auto;
+      margin-bottom: 20px;
+    }
+
+    .keyword { color: #f43f5e; }
+    .function { color: #38bdf8; }
+    .string { color: #34d399; }
+    .comment { color: #64748b; font-style: italic; }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    
+    .badge-primary { background: rgba(99, 102, 241, 0.15); color: var(--primary); border: 1px solid rgba(99, 102, 241, 0.3); }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    .print-btn-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .print-btn {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .print-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 25px rgba(99, 102, 241, 0.5);
+    }
+
+    .page-break {
+      display: none;
+    }
+
+    /* Print styling rules */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #1a1a24 !important;
+        padding: 0;
+      }
+      .container {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      h1 {
+        background: none !important;
+        -webkit-text-fill-color: #000000 !important;
+        color: #000000 !important;
+        font-size: 28pt;
+      }
+      .subtitle {
+        color: #555566 !important;
+        font-size: 12pt;
+        margin-bottom: 30pt;
+      }
+      h2 {
+        color: #111122 !important;
+        border-bottom: 2pt solid #dddddd !important;
+        margin-top: 30pt;
+        page-break-after: avoid;
+      }
+      h3 {
+        color: #333344 !important;
+        page-break-after: avoid;
+      }
+      p, li {
+        color: #222233 !important;
+        font-size: 11pt;
+      }
+      .code-block {
+        background: #f8f8fa !important;
+        border: 1px solid #cccccc !important;
+        color: #111122 !important;
+        page-break-inside: avoid;
+        font-size: 9.5pt;
+      }
+      .print-btn-container {
+        display: none !important;
+      }
+      .page-break {
+        display: block;
+        page-break-before: always;
+      }
+      .keyword { color: #7f0055; font-weight: bold; }
+      .function { color: #0000c0; }
+      .string { color: #2a00ff; }
+      .comment { color: #3f7f5f; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="print-btn-container">
+    <button class="print-btn" onclick="window.print()">🖨️ Save as PDF / Print Report</button>
+  </div>
+
+  <div class="container">
+    <h1>PROJECT REPORT: AI STUDY PLANNER</h1>
+    <div class="subtitle">An Immersive, 3D Space-Mapped Curricular Scheduler with Real-Time Gemini AI Coaching</div>
+
+    <h2>1. Executive Abstract</h2>
+    <p>
+      Traditional educational schedulers operate as linear spreadsheets that fail to engage the student's cognitive model or motivate long-term adherence. The **AI Study Planner** is a modern, immersive study workspace that represents a student's examination curriculum as a 3D solar system orbit simulation. By mapping individual subject workloads to orbiting planets, integrating difficulty weights, and utilizing the Google Gemini API as a real-time academic coach, the system converts exam preparation into an interactive cosmic journey.
+    </p>
+
+    <h2>2. System Architecture & Tech Stack</h2>
+    <p>
+      The application is constructed on a modern React environment designed for fast client interaction, local offline safety, and remote database sync.
+    </p>
+    <ul>
+      <li><strong>Frontend Layer:</strong> React 19 + Vite 8, utilizing custom HSL Glassmorphism styling sheets.</li>
+      <li><strong>3D Engine:</strong> Three.js (custom WebGL canvas rendering starfields, glowing planetary bodies, orbital lines, and focal camera transitions).</li>
+      <li><strong>AI Brain:</strong> Google Gemini 1.5 Flash API (used for real-time pacing assessments and generating personalized action steps).</li>
+      <li><strong>Database & Sync Layer:</strong> Firebase Firestore (provides cross-device authentication and remote progress synchronization).</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h2>3. Key Features & Implementation Analysis</h2>
+
+    <h3>3.1. 3D Study Universe Engine</h3>
+    <p>
+      Each configured subject represents a planetary body orbiting a central pulsating Sun. The Sun represents the upcoming Target Exam Date, pulsing faster and changing color (Cyan to Red) as the exam day approaches. 
+      Planetary visual shaders dynamically transition colors (Red &rarr; Gold &rarr; Green) and increase in glow luminosity as the student toggles completed chapters on the subject checklist, providing immediate cognitive gratification.
+    </p>
+
+    <h3>3.2. Adaptive Scheduling Algorithm</h3>
+    <p>
+      The planner utilizes difficulty weighting parameters (Hard = 1.8x, Medium = 1.2x, Easy = 0.7x load multiplier) to balance study sessions. It incorporates weekly rest days to prevent cognitive fatigue and locks the final 15% of the overall timeframe exclusively for revision and mock test drills.
+    </p>
+
+    <h3>3.3. Gemini API Live Coach Integration</h3>
+    <p>
+      The system calls the Gemini API (<code>gemini-1.5-flash</code>) in the background with a structured JSON prompt mapping student metadata (name, style, pacing, completed percentage). The API returns structured, motivational feedback, prep pacing statuses (e.g. <em>On Track</em>, <em>Lagging Behind</em>), and three immediate priorities.
+    </p>
+
+    <h3>3.4. Custom Chapters Upload (New Implementation)</h3>
+    <p>
+      Instead of restricting students to pre-populated academic templates, a new custom chapter subsystem has been introduced in the setup wizard.
+      Students can type chapter listings directly into a line-by-line editor or upload `.txt` and `.json` files. The system processes these files on the client side using a standard <code>FileReader</code>.
+    </p>
+
+    <div class="page-break"></div>
+
+    <h2>4. Core Code Walkthrough</h2>
+
+    <h3>4.1. Custom Chapter Upload & File Parser</h3>
+    <p>
+      This handler parses client-side text or JSON file payloads, loading them into the custom chapter editor:
+    </p>
+    <div class="code-block">
+<span class="keyword">const</span> <span class="function">handleFileUpload</span> = (e) => {
+  <span class="keyword">const</span> file = e.target.files[0];
+  <span class="keyword">if</span> (!file) <span class="keyword">return</span>;
+
+  <span class="keyword">const</span> reader = <span class="keyword">new</span> <span class="function">FileReader</span>();
+  reader.onload = (event) => {
+    <span class="keyword">const</span> content = event.target.result;
+    <span class="keyword">if</span> (file.name.<span class="function">endsWith</span>(<span class="string">'.json'</span>)) {
+      <span class="keyword">try</span> {
+        <span class="keyword">const</span> parsed = JSON.<span class="function">parse</span>(content);
+        <span class="keyword">if</span> (Array.<span class="function">isArray</span>(parsed)) {
+          <span class="function">setCustomChaptersText</span>(parsed.<span class="function">join</span>(<span class="string">'\n'</span>));
+        } <span class="keyword">else if</span> (<span class="keyword">typeof</span> parsed === <span class="string">'object'</span> && parsed.chapters) {
+          <span class="function">setCustomChaptersText</span>(parsed.chapters.<span class="function">join</span>(<span class="string">'\n'</span>));
+        }
+      } <span class="keyword">catch</span> (err) {
+        <span class="function">alert</span>(<span class="string">"JSON parsing error"</span>);
+      }
+    } <span class="keyword">else</span> {
+      <span class="keyword">const</span> lines = content.<span class="function">split</span>(/\r?\n/).<span class="function">map</span>(l => l.<span class="function">trim</span>()).<span class="function">filter</span>(l => l.length > 0);
+      <span class="function">setCustomChaptersText</span>(lines.<span class="function">join</span>(<span class="string">'\n'</span>));
+    }
+  };
+  reader.<span class="function">readAsText</span>(file);
+};
+    </div>
+
+    <h3>4.2. Gemini AI structured request body</h3>
+    <p>
+      The coaching prompt demands strict schema validation to prevent parsing failures on the frontend:
+    </p>
+    <div class="code-block">
+<span class="comment">// API payload structure using responseSchema</span>
+generationConfig: {
+  responseMimeType: <span class="string">"application/json"</span>,
+  responseSchema: {
+    type: <span class="string">"OBJECT"</span>,
+    properties: {
+      statusText: { type: <span class="string">"STRING"</span> },
+      status: { type: <span class="string">"STRING"</span>, enum: [<span class="string">"success"</span>, <span class="string">"warning"</span>, <span class="string">"danger"</span>] },
+      coachReport: { type: <span class="string">"STRING"</span> },
+      priorityAdvice: {
+        type: <span class="string">"ARRAY"</span>,
+        items: { type: <span class="string">"STRING"</span> }
+      }
+    },
+    required: [<span class="string">"statusText"</span>, <span class="string">"status"</span>, <span class="string">"coachReport"</span>, <span class="string">"priorityAdvice"</span>]
+  }
+}
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>5. Deployment and Operations Guide</h2>
+    <ol>
+      <li><strong>Clone & Install:</strong> Clone the project workspace, and execute <code>npm install</code>.</li>
+      <li><strong>Environment Setup:</strong> Create a <code>.env</code> file in the root directory and append your Gemini API credentials:
+        <div class="code-block">VITE_GEMINI_API_KEY=your_gemini_api_key_here</div>
+      </li>
+      <li><strong>Development Host:</strong> Fire up local host by executing <code>npm run dev</code>. The dev instance launches at <code>http://localhost:5173/</code>.</li>
+      <li><strong>Production Build:</strong> Compile package resources for CDN deployments using <code>npm run build</code>.</li>
+    </ol>
+
+    <h2>6. Learning Outcomes & Extensions</h2>
+    <p>
+      By implementing this codebase, students can master several advanced full-stack concepts:
+    </p>
+    <ul>
+      <li><strong>WebGL & Matrices:</strong> Understanding 3D translation vectors, scaling factors, planetary revolution angles, and user camera coordinate projections in Three.js.</li>
+      <li><strong>Schema-Strict Generative AI:</strong> Engineering prompt templates and specifying JSON response schemas to guarantee consistent structure when consuming AI outputs.</li>
+      <li><strong>File Stream & Streams API:</strong> Processing system files, using reader events, and managing raw client-side text sanitization.</li>
+      <li><strong>Reactive State Mechanics:</strong> Choreographing complex user states, synchronized localStorage cache safety nets, and debounced database updates.</li>
+    </ul>
+
+    <h3 style="text-align: center; margin-top: 50px; color: var(--text-secondary); font-size: 13px;">
+      Report compiled on: <span id="report-date"></span> | AI Study Planner Systems
+    </h3>
+  </div>
+
+  <script>
+    document.getElementById('report-date').innerText = new Date().toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  </script>
+</body>
+</html>
