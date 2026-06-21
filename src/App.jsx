@@ -226,7 +226,7 @@ function App() {
                 <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--secondary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Next-Gen Study Orchestrator</span>
               </div>
               <h1 style={{ fontSize: '48px', lineHeight: '1.1', fontWeight: 800, marginBottom: '16px', fontFamily: 'var(--font-display)' }}>
-                Master Your Exams with <span className="text-gradient-purple">AuraPlanner</span>
+                Master Your Exams with <span className="text-gradient-purple">AI Study Planner</span>
               </h1>
               <p style={{ fontSize: '18px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '30px' }}>
                 A 3D space-mapped study planner powered by adaptive cognitive algorithms. Upload your subjects, track completion in real-time, and let our AI study coach guide your schedule.
@@ -501,7 +501,7 @@ function App() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Brain size={28} color="var(--secondary)" className="float-anim" />
                 <div>
-                  <h1 style={{ fontSize: '20px', fontWeight: 800 }}>AuraPlanner</h1>
+                  <h1 style={{ fontSize: '20px', fontWeight: 800 }}>AI Study Planner</h1>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>AI 3D Study Workspace</span>
                 </div>
               </div>

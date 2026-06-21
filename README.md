@@ -1,11 +1,11 @@
-# 🌌 AuraPlanner — Next-Gen AI-Powered 3D Study Workspace
+# 🌌 AI Study Planner — Next-Gen AI-Powered 3D Study Workspace
 
 [![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
 [![Three.js](https://img.shields.io/badge/Three.js-r184-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-**AuraPlanner** is a futuristic, immersive study orchestrator that converts your curriculum into an interactive 3D solar system. Powered by adaptive cognitive algorithms and an in-app AI study coach, AuraPlanner turns exam preparation into an interactive cosmic journey.
+**AI Study Planner** is a futuristic, immersive study orchestrator that converts your curriculum into an interactive 3D solar system. Powered by adaptive cognitive algorithms and an in-app AI study coach, AI Study Planner turns exam preparation into an interactive cosmic journey.
 
 ---
 
@@ -92,7 +92,7 @@ npm run preview
 ## 🎨 Interactive Preview & Usage Guide
 
 <details>
-<summary><b>📖 How to Use AuraPlanner (Click to Expand)</b></summary>
+<summary><b>📖 How to Use AI Study Planner (Click to Expand)</b></summary>
 
 1. **Configure Your Profile:** Input your name and preferred study style (Visual, Practice, or Reading).
 2. **Define the Subject Matrix:** Add subjects, set difficulty tiers, and specify the number of chapters. (Standard subjects like Physics/Math auto-populate with core academic topics).
