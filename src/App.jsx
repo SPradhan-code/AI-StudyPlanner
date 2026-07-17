@@ -1369,13 +1369,13 @@ function App() {
                           boxShadow: 'var(--shadow-neon-cyan)',
                           flexShrink: 0
                         }}>
-                          {coachFeedback?.completionRate.toFixed(0)}%
+                          {coachFeedback?.completionRate?.toFixed(0) ?? 0}%
                         </div>
                         <div>
                           <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Overall Preparation Score</div>
                           <h3 style={{ fontSize: '16px', color: '#fff', margin: '2px 0' }}>Status: {coachFeedback?.statusText}</h3>
                           <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                            Completed {coachFeedback?.completedTopics} out of {coachFeedback?.totalTopics} course chapters.
+                            Completed {coachFeedback?.completedTopics ?? 0} out of {coachFeedback?.totalTopics ?? 0} course chapters.
                           </p>
                         </div>
                       </div>

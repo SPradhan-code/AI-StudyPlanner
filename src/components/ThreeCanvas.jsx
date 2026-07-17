@@ -294,7 +294,7 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
 
     // --- Animation Loop ---
     let animationFrameId;
-    let clock = new THREE.Clock();
+    let clock = new THREE.Timer();
 
     const animate = () => {
       const elapsedTime = clock.getElapsedTime();

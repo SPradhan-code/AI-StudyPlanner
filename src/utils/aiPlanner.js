@@ -368,10 +368,12 @@ export async function getLiveAICoachFeedback({ subjects, daysRemaining, studySty
   const localFallback = getAICoachFeedback({ subjects, daysRemaining, studyStyle });
   
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey || apiKey === "your_gemini_api_key_here") {
-    console.log("Gemini API key not found in environment, using local rule-based feedback.");
-    return localFallback;
-  }
+  // Change whatever complex condition is there to just this:
+if (!import.meta.env.VITE_GEMINI_API_KEY) {
+  console.log("Gemini API key not found in environment...");
+} else {
+  // Your code to initialize the live Gemini AI coach goes here
+}
 
   // Calculate statistics for context
   let totalTopics = 0;
