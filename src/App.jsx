@@ -1,33 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Brain, 
-  Calendar, 
-  TrendingUp, 
-  CheckCircle2, 
-  Plus, 
-  Trash2, 
-  Clock, 
-  User, 
-  Sparkles, 
-  BookOpen, 
-  ChevronRight, 
-  AlertCircle, 
-  Coffee, 
+import {
+  Brain,
+  Calendar,
+  TrendingUp,
+  CheckCircle2,
+  Plus,
+  Trash2,
+  Clock,
+  User,
+  Sparkles,
+  BookOpen,
+  ChevronRight,
+  AlertCircle,
+  Coffee,
   Award,
   RefreshCw,
   Home,
   Upload,
   FileText
 } from 'lucide-react';
-import ThreeCanvas from './components/ThreeCanvas';
+// ThreeCanvas removed — was causing repeated crashes, no longer used
 import { generateStudyPlan, getAICoachFeedback, getLiveAICoachFeedback, getTopicsForSubject } from './utils/aiPlanner';
 import confetti from 'canvas-confetti';
 import { auth, saveUserData, getUserData } from './utils/firebase';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged 
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
 } from 'firebase/auth';
 
 function App() {
@@ -43,14 +43,14 @@ function App() {
   // --- Persistent State or Defaults ---
   const [isConfigured, setIsConfigured] = useState(false);
   const [wizardStep, setWizardStep] = useState(1); // 1: Profile, 2: Subjects, 3: Schedule
-  
+
   // Student Profile
   const [studentName, setStudentName] = useState('');
   const [studyStyle, setStudyStyle] = useState('visual'); // visual, practice, reading
 
   // Subjects & Topics
   const [subjects, setSubjects] = useState([]);
-  
+
   // New Subject Input Temp State
   const [tempSubName, setTempSubName] = useState('');
   const [tempSubDiff, setTempSubDiff] = useState('medium');
@@ -435,11 +435,11 @@ function App() {
     };
     const current = styles[diff] || styles.medium;
     return (
-      <span style={{ 
-        padding: '3px 8px', 
-        borderRadius: '6px', 
-        fontSize: '11px', 
-        fontWeight: 'bold', 
+      <span style={{
+        padding: '3px 8px',
+        borderRadius: '6px',
+        fontSize: '11px',
+        fontWeight: 'bold',
         textTransform: 'uppercase',
         backgroundColor: current.bg,
         color: current.text,
@@ -491,13 +491,13 @@ function App() {
                     <span>{authError}</span>
                   </div>
                 )}
-                
+
                 <div className="auth-input-group">
                   <label className="auth-input-label">Email Address</label>
-                  <input 
-                    type="email" 
-                    className="form-input" 
-                    placeholder="you@example.com" 
+                  <input
+                    type="email"
+                    className="form-input"
+                    placeholder="you@example.com"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
                     required
@@ -506,10 +506,10 @@ function App() {
 
                 <div className="auth-input-group" style={{ marginBottom: '24px' }}>
                   <label className="auth-input-label">Password</label>
-                  <input 
-                    type="password" 
-                    className="form-input" 
-                    placeholder="••••••••" 
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder="••••••••"
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
                     required
@@ -523,9 +523,9 @@ function App() {
 
               <div className="auth-footer">
                 {authMode === 'login' ? "Don't have an account?" : "Already have an account?"}
-                <button 
-                  type="button" 
-                  className="auth-switch-btn" 
+                <button
+                  type="button"
+                  className="auth-switch-btn"
                   onClick={() => {
                     setAuthMode(authMode === 'login' ? 'signup' : 'login');
                     setAuthError('');
@@ -539,7 +539,7 @@ function App() {
         </div>
       ) : !isConfigured ? (
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', justifyContent: 'center', alignItems: 'center', padding: '40px 20px' }}>
-          
+
           {/* Landing Header */}
           {wizardStep === 1 && (
             <div style={{ textAlign: 'center', maxWidth: '800px', marginBottom: '40px', animation: 'fadeIn 1s ease' }}>
@@ -567,16 +567,16 @@ function App() {
             </div>
 
             <div className="card-body">
-              
+
               {/* STEP 1: Student Profile */}
               {wizardStep === 1 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 500 }}>What is your name?</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      placeholder="Enter student name..." 
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter student name..."
                       value={studentName}
                       onChange={(e) => setStudentName(e.target.value)}
                     />
@@ -584,7 +584,7 @@ function App() {
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 500 }}>What is your preferred study style?</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => setStudyStyle('visual')}
                         className={studyStyle === 'visual' ? 'btn-primary' : 'btn-secondary'}
@@ -593,7 +593,7 @@ function App() {
                         <Sparkles size={16} />
                         <span>Visual / Maps</span>
                       </button>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => setStudyStyle('practice')}
                         className={studyStyle === 'practice' ? 'btn-primary' : 'btn-secondary'}
@@ -602,7 +602,7 @@ function App() {
                         <TrendingUp size={16} />
                         <span>Practice Qs</span>
                       </button>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => setStudyStyle('reading')}
                         className={studyStyle === 'reading' ? 'btn-primary' : 'btn-secondary'}
@@ -613,10 +613,10 @@ function App() {
                       </button>
                     </div>
                   </div>
-                  
-                  <button 
-                    type="button" 
-                    className="btn-primary" 
+
+                  <button
+                    type="button"
+                    className="btn-primary"
                     style={{ marginTop: '10px', justifyContent: 'center' }}
                     onClick={() => {
                       if (!studentName.trim()) {
@@ -634,15 +634,15 @@ function App() {
               {/* STEP 2: Subject Matrix Setup */}
               {wizardStep === 2 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  
+
                   {/* Add Subject form snippet */}
                   <form onSubmit={handleAddSubject} style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                       <div style={{ flex: '2 1 180px' }}>
-                        <input 
-                          type="text" 
-                          className="form-input" 
-                          placeholder="e.g. Physics, Chemistry, Maths..." 
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g. Physics, Chemistry, Maths..."
                           value={tempSubName}
                           onChange={(e) => setTempSubName(e.target.value)}
                         />
@@ -719,13 +719,13 @@ function App() {
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                             Each line becomes a chapter/topic.
                           </span>
-                          
-                          <label 
-                            className="btn-secondary" 
-                            style={{ 
-                              padding: '4px 10px', 
-                              fontSize: '10px', 
-                              borderRadius: '6px', 
+
+                          <label
+                            className="btn-secondary"
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '10px',
+                              borderRadius: '6px',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
@@ -734,11 +734,11 @@ function App() {
                           >
                             <Upload size={10} />
                             <span>Upload .txt / .json</span>
-                            <input 
-                              type="file" 
-                              accept=".txt,.json" 
-                              onChange={handleFileUpload} 
-                              style={{ display: 'none' }} 
+                            <input
+                              type="file"
+                              accept=".txt,.json"
+                              onChange={handleFileUpload}
+                              style={{ display: 'none' }}
                             />
                           </label>
                         </div>
@@ -758,14 +758,14 @@ function App() {
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
                         {subjects.map((sub) => (
-                          <div 
-                            key={sub.id} 
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              backgroundColor: 'rgba(255,255,255,0.03)', 
-                              padding: '10px 14px', 
+                          <div
+                            key={sub.id}
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              backgroundColor: 'rgba(255,255,255,0.03)',
+                              padding: '10px 14px',
                               borderRadius: '10px',
                               border: '1px solid rgba(255,255,255,0.05)'
                             }}
@@ -777,9 +777,9 @@ function App() {
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                               {getDiffBadge(sub.difficulty)}
-                              <button 
-                                type="button" 
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} 
+                              <button
+                                type="button"
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
                                 onClick={() => handleRemoveSubject(sub.id)}
                               >
                                 <Trash2 size={16} hover={{ color: '#ef4444' }} />
@@ -796,9 +796,9 @@ function App() {
                     <button type="button" className="btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setWizardStep(1)}>
                       Back
                     </button>
-                    <button 
-                      type="button" 
-                      className="btn-primary" 
+                    <button
+                      type="button"
+                      className="btn-primary"
                       style={{ flex: 2, justifyContent: 'center' }}
                       onClick={() => {
                         if (subjects.length === 0) {
@@ -820,9 +820,9 @@ function App() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 500 }}>Target Exam Date</label>
-                      <input 
-                        type="date" 
-                        className="form-input" 
+                      <input
+                        type="date"
+                        className="form-input"
                         value={examDate}
                         onChange={(e) => setExamDate(e.target.value)}
                       />
@@ -873,9 +873,9 @@ function App() {
                     <button type="button" className="btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setWizardStep(2)}>
                       Back
                     </button>
-                    <button 
-                      type="button" 
-                      className="btn-primary" 
+                    <button
+                      type="button"
+                      className="btn-primary"
                       style={{ flex: 2, justifyContent: 'center' }}
                       onClick={handleFinishWizard}
                     >
@@ -892,13 +892,13 @@ function App() {
 
         // ================= MAIN INTERACTIVE DASHBOARD =================
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-          
+
           {/* Main Top Header Navigation */}
-          <header style={{ 
-            borderBottom: '1px solid var(--border-color)', 
-            backdropFilter: 'blur(16px)', 
-            position: 'sticky', 
-            top: 0, 
+          <header style={{
+            borderBottom: '1px solid var(--border-color)',
+            backdropFilter: 'blur(16px)',
+            position: 'sticky',
+            top: 0,
             zIndex: 50,
             background: 'rgba(6, 6, 12, 0.8)'
           }}>
@@ -913,8 +913,8 @@ function App() {
 
               {/* Action tabs */}
               <nav style={{ display: 'flex', gap: '8px', backgroundColor: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <button 
-                  onClick={() => setActiveTab('dashboard')} 
+                <button
+                  onClick={() => setActiveTab('dashboard')}
                   style={{
                     backgroundColor: activeTab === 'dashboard' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
                     border: 'none',
@@ -931,10 +931,10 @@ function App() {
                   }}
                 >
                   <Home size={15} color={activeTab === 'dashboard' ? 'var(--secondary)' : 'var(--text-secondary)'} />
-                  <span>3D Space</span>
+                  <span>Dashboard</span>
                 </button>
-                <button 
-                  onClick={() => setActiveTab('calendar')} 
+                <button
+                  onClick={() => setActiveTab('calendar')}
                   style={{
                     backgroundColor: activeTab === 'calendar' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
                     border: 'none',
@@ -953,8 +953,8 @@ function App() {
                   <Calendar size={15} color={activeTab === 'calendar' ? 'var(--secondary)' : 'var(--text-secondary)'} />
                   <span>Study Calendar</span>
                 </button>
-                <button 
-                  onClick={() => setActiveTab('coach')} 
+                <button
+                  onClick={() => setActiveTab('coach')}
                   style={{
                     backgroundColor: activeTab === 'coach' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
                     border: 'none',
@@ -983,7 +983,7 @@ function App() {
                     Exams: <span style={{ color: 'var(--secondary)' }}>{studyPlan?.daysRemaining || 0}d left</span>
                   </span>
                 </div>
-                <button 
+                <button
                   onClick={handleResetPlan}
                   className="btn-secondary"
                   style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }}
@@ -991,7 +991,7 @@ function App() {
                   <RefreshCw size={12} />
                   <span>Reconfigure</span>
                 </button>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="btn-secondary"
                   style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px', borderColor: 'rgba(239,68,68,0.2)', color: 'var(--danger)' }}
@@ -1006,41 +1006,14 @@ function App() {
           {/* Main workspace area */}
           <main style={{ flex: 1, padding: '30px 0' }}>
             <div className="container">
-              
-              {/* Tab 1: 3D Workspace */}
-              {activeTab === 'dashboard' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '30px', minHeight: 'calc(100vh - 180px)' }}>
-                  
-                  {/* Left Column: ThreeJS Space */}
-                  <div className="glass-panel" style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '600px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      position: 'absolute', 
-                      top: '16px', 
-                      left: '16px', 
-                      zIndex: 5, 
-                      backgroundColor: 'rgba(6, 6, 12, 0.7)', 
-                      padding: '8px 14px', 
-                      borderRadius: '12px', 
-                      border: '1px solid rgba(255,255,255,0.05)',
-                      pointerEvents: 'none'
-                    }}>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>3D Orbit View</div>
-                      <h2 style={{ fontSize: '14px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span>Interactive Study Universe</span>
-                      </h2>
-                    </div>
 
-                    <ThreeCanvas 
-                      subjects={subjects} 
-                      daysRemaining={studyPlan?.daysRemaining || 10}
-                      onSubjectClick={(id) => setActiveSubjectId(id)}
-                      activeSubjectId={activeSubjectId}
-                    />
-                  </div>
+              {/* Tab 1: Dashboard */}
+              {activeTab === 'dashboard' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '30px', minHeight: 'calc(100vh - 180px)', maxWidth: '640px', margin: '0 auto' }}>
 
                   {/* Right Column: Dynamic Checklist & Detail Panels */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    
+
                     {/* General AI Quick Status */}
                     {coachFeedback && (
                       <div className="glass-panel" style={{ padding: '20px', position: 'relative', overflow: 'hidden' }}>
@@ -1050,31 +1023,31 @@ function App() {
                           right: 0,
                           width: '120px',
                           height: '100%',
-                          background: coachFeedback.status === 'success' 
+                          background: coachFeedback.status === 'success'
                             ? 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(0,0,0,0) 80%)'
                             : coachFeedback.status === 'warning'
-                            ? 'radial-gradient(circle, rgba(245,158,11,0.08) 0%, rgba(0,0,0,0) 80%)'
-                            : 'radial-gradient(circle, rgba(239,68,68,0.08) 0%, rgba(0,0,0,0) 80%)',
+                              ? 'radial-gradient(circle, rgba(245,158,11,0.08) 0%, rgba(0,0,0,0) 80%)'
+                              : 'radial-gradient(circle, rgba(239,68,68,0.08) 0%, rgba(0,0,0,0) 80%)',
                           pointerEvents: 'none'
                         }}></div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Coach Report</span>
-                          <span style={{ 
-                            fontSize: '11px', 
-                            padding: '4px 10px', 
-                            borderRadius: '20px', 
+                          <span style={{
+                            fontSize: '11px',
+                            padding: '4px 10px',
+                            borderRadius: '20px',
                             fontWeight: 'bold',
-                            backgroundColor: coachFeedback.status === 'success' 
-                              ? 'rgba(16, 185, 129, 0.12)' 
+                            backgroundColor: coachFeedback.status === 'success'
+                              ? 'rgba(16, 185, 129, 0.12)'
                               : coachFeedback.status === 'warning'
-                              ? 'rgba(245, 158, 11, 0.12)'
-                              : 'rgba(239, 68, 68, 0.12)',
+                                ? 'rgba(245, 158, 11, 0.12)'
+                                : 'rgba(239, 68, 68, 0.12)',
                             color: coachFeedback.status === 'success'
                               ? 'var(--success)'
                               : coachFeedback.status === 'warning'
-                              ? 'var(--warning)'
-                              : 'var(--danger)'
+                                ? 'var(--warning)'
+                                : 'var(--danger)'
                           }}>
                             {coachFeedback.statusText}
                           </span>
@@ -1098,12 +1071,12 @@ function App() {
                             <BookOpen size={18} color="var(--primary)" />
                             <h3 style={{ fontSize: '15px' }}>Subject Checklist</h3>
                           </div>
-                          
+
                           {/* Subject selection dropdown inside card header */}
-                          <select 
-                            className="form-select" 
+                          <select
+                            className="form-select"
                             style={{ width: 'auto', padding: '6px 10px', fontSize: '12px' }}
-                            value={activeSubjectId || ''} 
+                            value={activeSubjectId || ''}
                             onChange={(e) => setActiveSubjectId(e.target.value)}
                           >
                             {subjects.map(s => (
@@ -1116,12 +1089,12 @@ function App() {
                       <div className="card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {(() => {
                           const currentSub = subjects.find(s => s.id === activeSubjectId);
-                          if (!currentSub) return <div style={{ color: 'var(--text-muted)' }}>Select a subject from the 3D space.</div>;
-                          
+                          if (!currentSub) return <div style={{ color: 'var(--text-muted)' }}>Select a subject from the dropdown above.</div>;
+
                           const total = currentSub.topics.length;
                           const completed = currentSub.completedTopics.length;
                           const progressPercent = total > 0 ? (completed / total) * 100 : 0;
-                          
+
                           return (
                             <>
                               {/* Subject Meta Details */}
@@ -1142,9 +1115,9 @@ function App() {
 
                               {/* Progress bar */}
                               <div style={{ height: '6px', width: '100%', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                                <div style={{ 
-                                  height: '100%', 
-                                  width: `${progressPercent}%`, 
+                                <div style={{
+                                  height: '100%',
+                                  width: `${progressPercent}%`,
                                   background: 'linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%)',
                                   transition: 'width 0.4s ease',
                                   boxShadow: 'var(--shadow-neon-cyan)'
@@ -1156,7 +1129,7 @@ function App() {
                                 {currentSub.topics.map((topic, idx) => {
                                   const isChecked = currentSub.completedTopics.includes(topic);
                                   return (
-                                    <div 
+                                    <div
                                       key={topic}
                                       onClick={() => toggleTopicCompletion(currentSub.id, topic)}
                                       style={{
@@ -1184,8 +1157,8 @@ function App() {
                                       }}>
                                         {isChecked && <CheckCircle2 size={12} color="#fff" />}
                                       </div>
-                                      <span style={{ 
-                                        fontSize: '13px', 
+                                      <span style={{
+                                        fontSize: '13px',
                                         color: isChecked ? 'var(--text-secondary)' : '#fff',
                                         textDecoration: isChecked ? 'line-through' : 'none',
                                         transition: 'all 0.2s ease'
@@ -1226,7 +1199,7 @@ function App() {
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        
+
                         {/* Phase info bar */}
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', backgroundColor: 'rgba(255,255,255,0.02)', padding: '12px 18px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '13px', color: 'var(--text-secondary)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1248,7 +1221,7 @@ function App() {
                           {studyPlan?.schedule.map((day, idx) => {
                             let cardBorder = 'rgba(255,255,255,0.06)';
                             let headerBg = 'rgba(255,255,255,0.01)';
-                            
+
                             if (day.isOffDay) {
                               cardBorder = 'rgba(255, 255, 255, 0.05)';
                               headerBg = 'rgba(255, 255, 255, 0.02)';
@@ -1258,40 +1231,40 @@ function App() {
                             }
 
                             return (
-                              <div 
-                                key={idx} 
-                                style={{ 
-                                  border: `1px solid ${cardBorder}`, 
-                                  borderRadius: '12px', 
+                              <div
+                                key={idx}
+                                style={{
+                                  border: `1px solid ${cardBorder}`,
+                                  borderRadius: '12px',
                                   overflow: 'hidden',
                                   backgroundColor: 'rgba(10, 10, 20, 0.3)',
                                   transition: 'all 0.2s ease',
                                 }}
                               >
                                 {/* Day Row Header */}
-                                <div style={{ 
-                                  padding: '10px 14px', 
-                                  display: 'flex', 
-                                  justifyContent: 'space-between', 
+                                <div style={{
+                                  padding: '10px 14px',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
                                   alignItems: 'center',
                                   backgroundColor: headerBg,
                                   borderBottom: '1px solid rgba(255,255,255,0.04)'
                                 }}>
                                   <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff' }}>{day.date}</span>
-                                  <span style={{ 
-                                    fontSize: '10px', 
-                                    padding: '2px 8px', 
-                                    borderRadius: '10px', 
-                                    backgroundColor: day.isOffDay 
-                                      ? 'rgba(255,255,255,0.06)' 
+                                  <span style={{
+                                    fontSize: '10px',
+                                    padding: '2px 8px',
+                                    borderRadius: '10px',
+                                    backgroundColor: day.isOffDay
+                                      ? 'rgba(255,255,255,0.06)'
                                       : day.phase === 'Revision & Mock Exams'
-                                      ? 'rgba(0, 242, 254, 0.12)'
-                                      : 'rgba(99, 102, 241, 0.12)',
-                                    color: day.isOffDay 
-                                      ? 'var(--text-muted)' 
+                                        ? 'rgba(0, 242, 254, 0.12)'
+                                        : 'rgba(99, 102, 241, 0.12)',
+                                    color: day.isOffDay
+                                      ? 'var(--text-muted)'
                                       : day.phase === 'Revision & Mock Exams'
-                                      ? 'var(--secondary)'
-                                      : 'var(--primary)',
+                                        ? 'var(--secondary)'
+                                        : 'var(--primary)',
                                     fontWeight: 'bold'
                                   }}>
                                     {day.isOffDay ? 'Rest' : day.phase === 'Revision & Mock Exams' ? 'Revision' : 'Study'}
@@ -1312,7 +1285,7 @@ function App() {
                                         )}
                                         <h4 style={{ fontSize: '12px', color: '#fff', fontWeight: 600 }}>{act.title}</h4>
                                       </div>
-                                      
+
                                       {act.subjectName && (
                                         <div style={{ fontSize: '11px', color: 'var(--secondary)', display: 'inline-flex' }}>
                                           Target: {act.subjectName}
@@ -1322,7 +1295,7 @@ function App() {
                                       <p style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                                         {act.description}
                                       </p>
-                                      
+
                                       {!day.isOffDay && (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
                                           <Clock size={10} />
@@ -1345,23 +1318,23 @@ function App() {
               {/* Tab 3: Detailed AI Coach */}
               {activeTab === 'coach' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', animation: 'fadeIn 0.3s ease' }}>
-                  
+
                   {/* Left Column: Summary and Core advice */}
                   <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
                     <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <Sparkles size={20} color="var(--accent)" />
                       <h2 style={{ fontSize: '18px' }}>AI Study Coach Assessment</h2>
                     </div>
-                    
+
                     <div className="card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       <div style={{ display: 'flex', gap: '20px', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ 
-                          width: '70px', 
-                          height: '70px', 
-                          borderRadius: '50%', 
-                          border: '2px solid var(--secondary)', 
-                          display: 'flex', 
-                          alignItems: 'center', 
+                        <div style={{
+                          width: '70px',
+                          height: '70px',
+                          borderRadius: '50%',
+                          border: '2px solid var(--secondary)',
+                          display: 'flex',
+                          alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: '18px',
                           fontWeight: 'bold',
@@ -1385,10 +1358,10 @@ function App() {
                           <AlertCircle size={15} color="var(--primary)" />
                           <span>Personalized Cognitive Report</span>
                         </h4>
-                        <div style={{ 
-                          backgroundColor: 'rgba(10, 10, 20, 0.4)', 
-                          padding: '16px', 
-                          borderRadius: '12px', 
+                        <div style={{
+                          backgroundColor: 'rgba(10, 10, 20, 0.4)',
+                          padding: '16px',
+                          borderRadius: '12px',
                           border: '1px solid rgba(255,255,255,0.04)',
                           fontSize: '13px',
                           lineHeight: '1.6',
@@ -1419,27 +1392,27 @@ function App() {
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {coachFeedback?.priorityAdvice.map((advice, idx) => (
-                          <div 
-                            key={idx} 
-                            style={{ 
-                              display: 'flex', 
-                              gap: '12px', 
-                              backgroundColor: 'rgba(255,255,255,0.02)', 
-                              padding: '14px', 
-                              borderRadius: '10px', 
-                              border: '1px solid rgba(255,255,255,0.04)' 
+                          <div
+                            key={idx}
+                            style={{
+                              display: 'flex',
+                              gap: '12px',
+                              backgroundColor: 'rgba(255,255,255,0.02)',
+                              padding: '14px',
+                              borderRadius: '10px',
+                              border: '1px solid rgba(255,255,255,0.04)'
                             }}
                           >
-                            <span style={{ 
-                              width: '20px', 
-                              height: '20px', 
-                              borderRadius: '50%', 
-                              backgroundColor: 'rgba(0, 242, 254, 0.1)', 
-                              color: 'var(--secondary)', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              fontSize: '11px', 
+                            <span style={{
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              backgroundColor: 'rgba(0, 242, 254, 0.1)',
+                              color: 'var(--secondary)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '11px',
                               fontWeight: 'bold',
                               border: '1px solid rgba(0, 242, 254, 0.2)',
                               flexShrink: 0
@@ -1453,11 +1426,11 @@ function App() {
                         ))}
                       </div>
 
-                      <div style={{ 
-                        marginTop: 'auto', 
-                        padding: '12px', 
-                        borderRadius: '10px', 
-                        backgroundColor: 'rgba(99,102,241,0.04)', 
+                      <div style={{
+                        marginTop: 'auto',
+                        padding: '12px',
+                        borderRadius: '10px',
+                        backgroundColor: 'rgba(99,102,241,0.04)',
                         border: '1px solid rgba(99,102,241,0.1)',
                         display: 'flex',
                         gap: '10px',

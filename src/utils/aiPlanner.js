@@ -69,9 +69,9 @@ export function getTopicsForSubject(subjectName, chapterCount = 5) {
   if (DEFAULT_SUBJECT_TOPICS[cleanName]) {
     return [...DEFAULT_SUBJECT_TOPICS[cleanName]];
   }
-  
+
   // Try partial match
-  const matchedKey = Object.keys(DEFAULT_SUBJECT_TOPICS).find(key => 
+  const matchedKey = Object.keys(DEFAULT_SUBJECT_TOPICS).find(key =>
     cleanName.includes(key) || key.includes(cleanName)
   );
   if (matchedKey) {
@@ -92,14 +92,14 @@ export function getTopicsForSubject(subjectName, chapterCount = 5) {
 export function generateStudyPlan({ studentName, studyStyle, subjects, examDate, dailyHours, weeklyOffDays = [] }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const targetExamDate = new Date(examDate);
   targetExamDate.setHours(0, 0, 0, 0);
-  
+
   // Calculate total days left
   const msDiff = targetExamDate.getTime() - today.getTime();
   const totalDays = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
-  
+
   if (totalDays <= 0) {
     return {
       error: "The exam date must be in the future! Please select a valid upcoming date.",
@@ -110,7 +110,7 @@ export function generateStudyPlan({ studentName, studyStyle, subjects, examDate,
   // Generate calendar days
   const calendarDays = [];
   let currentDate = new Date(today);
-  
+
   // Weights based on subject difficulty
   const difficultyWeights = {
     hard: 1.8,
@@ -121,13 +121,13 @@ export function generateStudyPlan({ studentName, studyStyle, subjects, examDate,
   // We dedicate last 15% of time (minimum 2 days, maximum 5 days) to full revision/mock tests
   const revisionDaysCount = Math.max(2, Math.min(5, Math.floor(totalDays * 0.15)));
   const studyDaysCount = totalDays - revisionDaysCount;
-  
+
   // Generate active study list with remaining chapters
   let allChaptersToPlan = [];
   subjects.forEach(subject => {
     const weight = difficultyWeights[subject.difficulty] || 1.0;
     const uncompleted = subject.topics.filter(t => !subject.completedTopics.includes(t));
-    
+
     uncompleted.forEach(topic => {
       allChaptersToPlan.push({
         subjectId: subject.id,
@@ -142,17 +142,17 @@ export function generateStudyPlan({ studentName, studyStyle, subjects, examDate,
   // Calculate day-by-day distribution
   // We want to map dates to schedules
   let topicIndex = 0;
-  
+
   for (let i = 0; i < totalDays; i++) {
     const dateObj = new Date(today);
     dateObj.setDate(today.getDate() + i);
-    
+
     const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
     const dateString = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    
+
     // Check if it's an off day
     const isOffDay = weeklyOffDays.includes(dayOfWeek);
-    
+
     if (i >= studyDaysCount) {
       // Revision Phase
       calendarDays.push({
@@ -187,14 +187,14 @@ export function generateStudyPlan({ studentName, studyStyle, subjects, examDate,
       const activities = [];
       const hoursPerTask = 2; // Allocate in blocks of 2 hours
       const tasksForToday = Math.max(1, Math.round(dailyHours / hoursPerTask));
-      
+
       for (let t = 0; t < tasksForToday; t++) {
         if (topicIndex < allChaptersToPlan.length) {
           const currentTopic = allChaptersToPlan[topicIndex];
-          
+
           let actionVerb = "Study";
           let focusHint = "";
-          
+
           // Tailor recommendations based on study style
           if (studyStyle === "visual") {
             actionVerb = "Mind-Map & Visualize";
@@ -206,7 +206,7 @@ export function generateStudyPlan({ studentName, studyStyle, subjects, examDate,
             actionVerb = "Read & Summarize";
             focusHint = "Read the textbooks thoroughly. Summarize each section in your own words using bullet points.";
           }
-          
+
           activities.push({
             type: "study",
             subjectId: currentTopic.subjectId,
@@ -216,11 +216,11 @@ export function generateStudyPlan({ studentName, studyStyle, subjects, examDate,
             description: `${focusHint} Target weak spots and create a 5-minute summary sheet.`,
             durationHours: Math.min(hoursPerTask, dailyHours - (activities.reduce((sum, act) => sum + act.durationHours, 0)))
           });
-          
+
           topicIndex++;
         }
       }
-      
+
       // If no topics left, fill with revision
       if (activities.length === 0) {
         activities.push({
@@ -230,7 +230,7 @@ export function generateStudyPlan({ studentName, studyStyle, subjects, examDate,
           durationHours: dailyHours
         });
       }
-      
+
       calendarDays.push({
         date: dateString,
         isOffDay: false,
@@ -257,11 +257,11 @@ export function getAICoachFeedback({ subjects, daysRemaining, studyStyle }) {
   let completedTopics = 0;
   let hardCompleted = 0;
   let hardTotal = 0;
-  
+
   subjects.forEach(sub => {
     totalTopics += sub.topics.length;
     completedTopics += sub.completedTopics.length;
-    
+
     if (sub.difficulty === 'hard') {
       hardTotal += sub.topics.length;
       hardCompleted += sub.completedTopics.length;
@@ -270,7 +270,7 @@ export function getAICoachFeedback({ subjects, daysRemaining, studyStyle }) {
 
   const completionRate = totalTopics > 0 ? (completedTopics / totalTopics) * 100 : 0;
   const hardCompletionRate = hardTotal > 0 ? (hardCompleted / hardTotal) * 100 : 0;
-  
+
   let status = "success"; // green, warning (orange), danger (red)
   let statusText = "On Track";
   let coachReport = "";
@@ -309,7 +309,7 @@ export function getAICoachFeedback({ subjects, daysRemaining, studyStyle }) {
   } else {
     // Normal schedule pacing
     const dailyRequirement = (totalTopics - completedTopics) / daysRemaining;
-    
+
     if (dailyRequirement > 3) {
       status = "danger";
       statusText = "Lagging Behind";
@@ -366,14 +366,12 @@ export function getAICoachFeedback({ subjects, daysRemaining, studyStyle }) {
  */
 export async function getLiveAICoachFeedback({ subjects, daysRemaining, studyStyle, studentName }) {
   const localFallback = getAICoachFeedback({ subjects, daysRemaining, studyStyle });
-  
+
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  // Change whatever complex condition is there to just this:
-if (!import.meta.env.VITE_GEMINI_API_KEY) {
-  console.log("Gemini API key not found in environment...");
-} else {
-  // Your code to initialize the live Gemini AI coach goes here
-}
+  if (!apiKey) {
+    console.log("Gemini API key not found in environment. Using rule-based fallback.");
+    return localFallback;
+  }
 
   // Calculate statistics for context
   let totalTopics = 0;
@@ -406,7 +404,7 @@ Format the output strictly as JSON. No markdown wrappers, no backticks.`;
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
@@ -437,7 +435,8 @@ Format the output strictly as JSON. No markdown wrappers, no backticks.`;
     );
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.statusText}`);
+      const errBody = await response.text().catch(() => "");
+      throw new Error(`Gemini API error (${response.status}): ${errBody || response.statusText}`);
     }
 
     const result = await response.json();
@@ -458,4 +457,3 @@ Format the output strictly as JSON. No markdown wrappers, no backticks.`;
     return localFallback;
   }
 }
-

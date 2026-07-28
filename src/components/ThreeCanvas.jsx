@@ -6,13 +6,29 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
   const [hoveredSubject, setHoveredSubject] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
+  // Keep the latest callback/active-id in refs instead of effect deps.
+  // Otherwise, since onSubjectClick is a new function on every parent render,
+  // the entire WebGL scene gets torn down and rebuilt constantly, which is
+  // what caused the repeated "Cannot read properties of null" crashes.
+  const onSubjectClickRef = useRef(onSubjectClick);
+  const activeSubjectIdRef = useRef(activeSubjectId);
+
+  useEffect(() => {
+    onSubjectClickRef.current = onSubjectClick;
+  }, [onSubjectClick]);
+
+  useEffect(() => {
+    activeSubjectIdRef.current = activeSubjectId;
+  }, [activeSubjectId]);
+
   useEffect(() => {
     if (!mountRef.current) return;
+    let isActive = true; // guards stale RAF callbacks after unmount
 
     // --- Scene Setup ---
     const width = mountRef.current.clientWidth;
     const height = mountRef.current.clientHeight;
-    
+
     const scene = new THREE.Scene();
     scene.background = null; // Transparent so the index.css background glow shows through
 
@@ -51,12 +67,12 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
       const r = 35 + Math.random() * 20;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      
+
       starPositions[i] = r * Math.sin(phi) * Math.cos(theta);
       starPositions[i + 1] = r * Math.sin(phi) * Math.sin(theta);
       starPositions[i + 2] = r * Math.cos(phi);
     }
-    
+
     starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     const starMaterial = new THREE.PointsMaterial({
       color: 0x94a3b8,
@@ -219,6 +235,8 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
     };
 
     const handleMouseMove = (e) => {
+      if (!mountRef.current) return; // guard: element may be mid-unmount
+
       // 1. Scene Dragging
       if (isDragging) {
         const deltaMove = {
@@ -271,8 +289,8 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
 
       if (intersects.length > 0) {
         const clickedObj = intersects[0].object;
-        if (onSubjectClick) {
-          onSubjectClick(clickedObj.userData.id);
+        if (onSubjectClickRef.current) {
+          onSubjectClickRef.current(clickedObj.userData.id);
         }
       }
     };
@@ -294,11 +312,12 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
 
     // --- Animation Loop ---
     let animationFrameId;
-    let clock = new THREE.Timer();
+    let clock = new THREE.Clock(); // THREE.Timer doesn't expose getElapsedTime()
 
     const animate = () => {
+      if (!isActive) return; // stop the loop once the effect has cleaned up
       const elapsedTime = clock.getElapsedTime();
-      
+
       // Rotate stars slowly
       starField.rotation.y = elapsedTime * 0.015;
 
@@ -319,7 +338,7 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
         planet.rotation.y += 0.02;
 
         // Visual feedback when active/selected
-        if (activeSubjectId === planet.userData.id) {
+        if (activeSubjectIdRef.current === planet.userData.id) {
           // Add a pulsing bounce
           planet.position.y = Math.sin(elapsedTime * 5) * 0.15 + 0.3;
           planet.material.emissiveIntensity = 0.45;
@@ -348,6 +367,7 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
 
     // --- Cleanup ---
     return () => {
+      isActive = false;
       cancelAnimationFrame(animationFrameId);
       domEl.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mousemove', handleMouseMove);
@@ -355,11 +375,11 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
       domEl.removeEventListener('click', handleMouseClick);
       domEl.removeEventListener('wheel', handleWheel);
       window.removeEventListener('resize', handleResize);
-      
+
       if (domEl.contains(renderer.domElement)) {
         domEl.removeChild(renderer.domElement);
       }
-      
+
       // Dispose materials & geometries
       starGeometry.dispose();
       starMaterial.dispose();
@@ -367,7 +387,7 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
       sunMat.dispose();
       coronaGeo.dispose();
       coronaMat.dispose();
-      
+
       meshesMap.forEach(mesh => {
         mesh.geometry.dispose();
         mesh.material.dispose();
@@ -382,13 +402,16 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
         line.material.dispose();
       });
     };
-  }, [subjects, daysRemaining, activeSubjectId, onSubjectClick]);
+    // Only subjects/daysRemaining actually change the geometry — activeSubjectId
+    // and onSubjectClick are read via refs above so clicking a planet no longer
+    // tears down and rebuilds the entire WebGL scene.
+  }, [subjects, daysRemaining]);
 
   return (
     <div ref={mountRef} style={{ width: '100%', height: '100%', position: 'relative', cursor: 'grab' }}>
       {/* 3D Tooltip Overlay */}
       {hoveredSubject && (
-        <div 
+        <div
           style={{
             position: 'absolute',
             left: `${tooltipPos.x}px`,
@@ -413,7 +436,7 @@ const ThreeCanvas = ({ subjects = [], daysRemaining = 10, onSubjectClick, active
       )}
 
       {/* Control Instruction Overlay */}
-      <div 
+      <div
         style={{
           position: 'absolute',
           bottom: '12px',
